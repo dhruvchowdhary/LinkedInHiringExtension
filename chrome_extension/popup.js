@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (data.hiringResults && data.hiringResults.length > 0) {
       displayResults(data.hiringResults);
       updateStatus(
-        `Previously found ${data.hiringResults.length} people hiring!`
+        `Previously found ${data.hiringResults.length} connections hiring!`
       );
     } else {
       updateStatus("Idle");
