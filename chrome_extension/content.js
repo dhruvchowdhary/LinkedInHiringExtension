@@ -2,6 +2,7 @@ console.log("LinkedIn Hiring Checker content script is running...");
 
 let currentPage = parseInt(localStorage.getItem("currentPage")) || 1;
 let processingComplete = false;
+let stopScript = false;
 
 function checkHiring() {
   const results = [];
@@ -43,7 +44,7 @@ function saveAndDisplayResults(results) {
     chrome.storage.local.set({ hiringResults: newResults }, () => {
       console.log("Results saved:", newResults);
 
-      if (processingComplete) {
+      if (processingComplete || stopScript) {
         updateStatus(`Complete, Found ${newResults.length} people hiring!`);
       } else {
         updatePopup(newResults);
@@ -79,30 +80,40 @@ function navigateToNextPage() {
 }
 
 function processPage() {
-  if (processingComplete) {
-    console.log("Processing already completed.");
-    updateStatus(`Complete, Found ${newResults.length} people hiring!`);
-    return;
-  }
+  chrome.storage.local.get("stopScript", (data) => {
+    if (data.stopScript) {
+      stopScript = true;
+      processingComplete = true;
+      saveAndDisplayResults([]); // Ensure we save and display final status
+      localStorage.removeItem("currentPage");
+      return;
+    }
 
-  // Check if we are on the correct search page
-  if (!window.location.href.includes("linkedin.com/search/results/people/")) {
-    navigateToSearchPage();
-    return;
-  }
+    if (processingComplete) {
+      console.log("Processing already completed.");
+      updateStatus(`Complete, Found ${newResults.length} people hiring!`);
+      return;
+    }
 
-  const { results, foundHiring } = checkHiring();
-  saveAndDisplayResults(results);
+    // Check if we are on the correct search page
+    if (!window.location.href.includes("linkedin.com/search/results/people/")) {
+      navigateToSearchPage();
+      return;
+    }
 
-  if (foundHiring) {
-    console.log("Hiring found on this page, navigating to the next page...");
-    setTimeout(navigateToNextPage, 3000); // wait before navigating to the next page
-  } else {
-    console.log("No more hiring results found. Process complete.");
-    processingComplete = true; // Ensure no further processing happens
-    saveAndDisplayResults([]); // Call to save final status and display complete message
-    localStorage.removeItem("currentPage");
-  }
+    const { results, foundHiring } = checkHiring();
+    saveAndDisplayResults(results);
+
+    if (foundHiring) {
+      console.log("Hiring found on this page, navigating to the next page...");
+      setTimeout(navigateToNextPage, 2500); // wait before navigating to the next page
+    } else {
+      console.log("No more hiring results found. Process complete.");
+      processingComplete = true; // Ensure no further processing happens
+      saveAndDisplayResults([]); // Call to save final status and display complete message
+      localStorage.removeItem("currentPage");
+    }
+  });
 }
 
 // Start the process by calling processPage

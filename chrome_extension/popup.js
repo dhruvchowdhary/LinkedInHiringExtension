@@ -17,6 +17,12 @@ document.getElementById("check-hiring").addEventListener("click", () => {
   });
 });
 
+document.getElementById("stop-hiring").addEventListener("click", () => {
+  chrome.storage.local.set({ stopScript: true }, () => {
+    updateStatus("Stopping... Please wait.");
+  });
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "updateResults") {
     displayResults(message.results);
