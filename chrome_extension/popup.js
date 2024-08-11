@@ -1,4 +1,7 @@
 document.getElementById("check-hiring").addEventListener("click", () => {
+  // Show the stop button when processing starts
+  document.getElementById("stop-hiring").style.display = "block";
+
   // Reset the necessary variables and clear the storage
   chrome.storage.local.set(
     {
@@ -38,6 +41,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     displayResults(message.results);
   } else if (message.action === "updateStatus") {
     updateStatus(message.status);
+
+    // Hide the stop button when processing is complete or stopped
+    if (
+      message.status.includes("Complete") ||
+      message.status.includes("Stopped")
+    ) {
+      document.getElementById("stop-hiring").style.display = "none";
+    }
   }
 });
 
