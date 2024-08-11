@@ -1,20 +1,30 @@
 document.getElementById("check-hiring").addEventListener("click", () => {
-  chrome.storage.local.clear(() => {
-    console.log("Cleared previous results.");
+  // Reset the necessary variables and clear the storage
+  chrome.storage.local.set(
+    {
+      stopScript: false,
+      currentPage: 1,
+      processingComplete: false,
+    },
+    () => {
+      chrome.storage.local.clear(() => {
+        console.log("Cleared previous results and reset variables.");
 
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      chrome.scripting.executeScript(
-        {
-          target: { tabId: tabs[0].id },
-          files: ["content.js"],
-        },
-        () => {
-          console.log("Content script executed.");
-          updateStatus("Processing... Page 1, Found 0 people hiring!");
-        }
-      );
-    });
-  });
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          chrome.scripting.executeScript(
+            {
+              target: { tabId: tabs[0].id },
+              files: ["content.js"],
+            },
+            () => {
+              console.log("Content script executed.");
+              updateStatus("Processing... Page 1, Found 0 people hiring!");
+            }
+          );
+        });
+      });
+    }
+  );
 });
 
 document.getElementById("stop-hiring").addEventListener("click", () => {
