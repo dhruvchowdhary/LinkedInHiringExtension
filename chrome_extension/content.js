@@ -81,18 +81,27 @@
   }
 
   function navigateToSearchPage() {
-    const searchUrl =
-      "https://www.linkedin.com/search/results/people/?keywords=hiring&network=%5B%22F%22%2C%22S%22%5D&origin=FACETED_SEARCH";
-    console.log(`Navigating to search page: ${searchUrl}`);
-    window.location.href = searchUrl;
+    chrome.storage.local.get("searchUrl", (data) => {
+      let searchUrl = data.searchUrl;
+      if (!searchUrl) {
+        console.error("Search URL is undefined.");
+        return;
+      }
+
+      // Update the search URL to include the current page number
+      if (window.currentPage > 1) {
+        searchUrl += `&page=${window.currentPage}`;
+      }
+
+      console.log(`Navigating to search page: ${searchUrl}`);
+      window.location.href = searchUrl;
+    });
   }
 
   function navigateToNextPage() {
     window.currentPage++;
     localStorage.setItem("currentPage", window.currentPage);
-    const nextPageUrl = `https://www.linkedin.com/search/results/people/?keywords=hiring&network=%5B%22F%22%2C%22S%22%5D&origin=FACETED_SEARCH&page=${window.currentPage}`;
-    console.log(`Navigating to the next page: ${nextPageUrl}`);
-    window.location.href = nextPageUrl;
+    navigateToSearchPage();
   }
 
   function processPage() {

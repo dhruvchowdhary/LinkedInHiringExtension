@@ -16,7 +16,7 @@ button {
     margin-bottom: 15px;
     cursor: pointer;
     border-radius: 10px;
-    border: 1px solid #ddd; /* Add or modify this line */
+    border: 1px solid #ddd;
 }
 
 #results div {
