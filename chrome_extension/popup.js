@@ -1,16 +1,30 @@
 document.addEventListener("DOMContentLoaded", () => {
   // Load previous selections from storage
-  chrome.storage.local.get(["toggle1st", "toggle2nd", "toggle3rd"], (data) => {
-    if (data.toggle1st) document.getElementById("toggle-1st").checked = true;
-    if (data.toggle2nd) document.getElementById("toggle-2nd").checked = true;
-    if (data.toggle3rd) document.getElementById("toggle-3rd").checked = true;
-    displayWarning();
-  });
+  chrome.storage.local.get(
+    ["toggle1st", "toggle2nd", "toggle3rd", "hiringResults"],
+    (data) => {
+      if (data.toggle1st)
+        document.getElementById("toggle-1st").classList.add("active");
+      if (data.toggle2nd)
+        document.getElementById("toggle-2nd").classList.add("active");
+      if (data.toggle3rd)
+        document.getElementById("toggle-3rd").classList.add("active");
+
+      // Display previous results if available
+      if (data.hiringResults && data.hiringResults.length > 0) {
+        displayResults(data.hiringResults);
+        updateStatus(
+          `Previously found ${data.hiringResults.length} connections hiring!`
+        );
+      }
+      displayWarning();
+    }
+  );
 
   // Event listeners for toggles
-  document.getElementById("toggle-1st").addEventListener("change", saveToggles);
-  document.getElementById("toggle-2nd").addEventListener("change", saveToggles);
-  document.getElementById("toggle-3rd").addEventListener("change", saveToggles);
+  document.getElementById("toggle-1st").addEventListener("click", toggleButton);
+  document.getElementById("toggle-2nd").addEventListener("click", toggleButton);
+  document.getElementById("toggle-3rd").addEventListener("click", toggleButton);
 
   document.getElementById("check-hiring").addEventListener("click", () => {
     // Hide the "Check Hiring" button and show the "Stop" button when processing starts
@@ -24,9 +38,15 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Previous results and state cleared.");
 
         // Get toggle states
-        const toggle1st = document.getElementById("toggle-1st").checked;
-        const toggle2nd = document.getElementById("toggle-2nd").checked;
-        const toggle3rd = document.getElementById("toggle-3rd").checked;
+        const toggle1st = document
+          .getElementById("toggle-1st")
+          .classList.contains("active");
+        const toggle2nd = document
+          .getElementById("toggle-2nd")
+          .classList.contains("active");
+        const toggle3rd = document
+          .getElementById("toggle-3rd")
+          .classList.contains("active");
 
         // Generate the LinkedIn URL based on selections
         let network = [];
@@ -95,10 +115,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  function toggleButton(event) {
+    const button = event.currentTarget;
+    button.classList.toggle("active");
+    saveToggles();
+  }
+
   function saveToggles() {
-    const toggle1st = document.getElementById("toggle-1st").checked;
-    const toggle2nd = document.getElementById("toggle-2nd").checked;
-    const toggle3rd = document.getElementById("toggle-3rd").checked;
+    const toggle1st = document
+      .getElementById("toggle-1st")
+      .classList.contains("active");
+    const toggle2nd = document
+      .getElementById("toggle-2nd")
+      .classList.contains("active");
+    const toggle3rd = document
+      .getElementById("toggle-3rd")
+      .classList.contains("active");
 
     // Save the selections to storage
     chrome.storage.local.set(
@@ -115,7 +147,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function displayWarning() {
-    const toggle3rd = document.getElementById("toggle-3rd").checked;
+    const toggle3rd = document
+      .getElementById("toggle-3rd")
+      .classList.contains("active");
     if (toggle3rd) {
       document.getElementById("warning-3rd").style.display = "block";
     } else {
@@ -140,6 +174,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateStatus(status) {
     const statusDiv = document.getElementById("status");
-    statusDiv.textContent = status;
+    if (status.toLowerCase() === "idle") {
+      statusDiv.classList.remove("visible");
+    } else {
+      statusDiv.textContent = status;
+      statusDiv.classList.add("visible");
+    }
   }
 });

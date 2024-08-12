@@ -12,13 +12,21 @@
         <h1 style="margin: 0;">LinkedIn Hiring Checker</h1>
     </div>
 
+    <!-- Description for the toggles -->
+    <p style="text-align: center; font-size: 14px; margin-bottom: 10px;">
+        Select the connection levels to search for people hiring.
+    </p>
+
     <!-- Toggle Buttons for Connection Levels -->
-    <div style="margin-bottom: 15px;">
-        <label><input type="checkbox" id="toggle-1st"> 1st Connections</label><br>
-        <label><input type="checkbox" id="toggle-2nd"> 2nd Connections</label><br>
-        <label><input type="checkbox" id="toggle-3rd"> 3rd Connections</label>
-        <p id="warning-3rd" style="color: red; display: none; margin-top: 5px;">Warning: Searching 3rd connections may take a long time and yield many results.</p>
+    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 8px;">
+        <button id="toggle-1st" class="toggle-button">1st</button>
+        <button id="toggle-2nd" class="toggle-button">2nd</button>
+        <button id="toggle-3rd" class="toggle-button">3rd</button>
     </div>
+
+    <p id="warning-3rd" style="color: red; font-size: 11px; text-align: center; display: none;">
+        Warning: Searching 3rd connections may take a long time and yield many results.
+    </p>
 
     <button id="check-hiring">Find Connections Hiring</button>
     <button id="stop-hiring" style="display:none;">Stop</button>

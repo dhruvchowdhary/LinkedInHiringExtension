@@ -13,6 +13,7 @@ button {
     width: 100%;
     padding: 10px;
     font-size: 16px;
+    margin-top: 5px;
     margin-bottom: 15px;
     cursor: pointer;
     border-radius: 10px;
@@ -24,4 +25,34 @@ button {
     padding: 5px;
     border-radius: 5px;
     border: 1px solid #ddd;
+}
+
+/* Toggle Button Styling */
+.toggle-button {
+    width: 60px;
+    height: 35px;  /* Adjusted height to make it less tall */
+    margin: 0 5px;
+    border: none;
+    border-radius: 8px;
+    background-color: #ddd;
+    color: #000;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.toggle-button.active {
+    background-color: #0073b1;
+    color: #fff;
+}
+
+#status {
+    display: none;  /* Hide the status initially */
+}
+
+#status.visible {
+    display: block;  /* Only show status if it’s not idle */
+    margin-top: 10px;
+    text-align: left;
+    font-size: 14px;
 }
