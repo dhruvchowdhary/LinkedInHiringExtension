@@ -11,8 +11,6 @@ document.getElementById("check-hiring").addEventListener("click", () => {
     },
     () => {
       chrome.storage.local.clear(() => {
-        console.log("Cleared previous results and reset variables.");
-
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           chrome.scripting.executeScript(
             {
@@ -20,7 +18,6 @@ document.getElementById("check-hiring").addEventListener("click", () => {
               files: ["content.js"],
             },
             () => {
-              console.log("Content script executed.");
               updateStatus("Processing... Page 1, Found 0 people hiring!");
             }
           );
@@ -59,7 +56,7 @@ function displayResults(results) {
   if (results && results.length > 0) {
     results.forEach((result) => {
       const resultDiv = document.createElement("div");
-      resultDiv.innerHTML = `<a href="${result.profileLink}" target="_blank"><strong>${result.name}</strong></a>: ${result.headline}`;
+      resultDiv.innerHTML = `<a href="${result.profileLink}" target="_blank"><strong>${result.name} (${result.connectionLevel})</strong></a>: ${result.headline}`;
       resultsDiv.appendChild(resultDiv);
     });
   } else {

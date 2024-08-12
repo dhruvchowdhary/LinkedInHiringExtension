@@ -21,6 +21,9 @@
       const nameElement = item.querySelector(
         '.entity-result__title-text > a span[aria-hidden="true"]'
       );
+      const connectionElement = item.querySelector(
+        ".entity-result__badge-text"
+      );
 
       if (
         headlineElement &&
@@ -32,8 +35,17 @@
         const name = nameElement ? nameElement.textContent.trim() : "Unknown";
         const headline = headlineElement.textContent.trim();
 
-        results.push({ name, headline, profileLink });
-        console.log(`Found hiring: ${name}, ${headline}`);
+        // Extract the connection level, remove any leading "•" and space, then take the first three characters
+        let connectionLevel = connectionElement
+          ? connectionElement.textContent
+              .trim()
+              .replace("•", "")
+              .trim()
+              .substring(0, 3)
+          : "";
+
+        results.push({ name, headline, profileLink, connectionLevel });
+        console.log(`Found hiring: ${name} (${connectionLevel}), ${headline}`);
       }
     });
 
