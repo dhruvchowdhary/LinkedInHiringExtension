@@ -27,69 +27,26 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("toggle-3rd").addEventListener("click", toggleButton);
 
   document.getElementById("check-hiring").addEventListener("click", () => {
-    // Hide the "Check Hiring" button and show the "Stop" button when processing starts
-    document.getElementById("check-hiring").style.display = "none";
-    document.getElementById("stop-hiring").style.display = "block";
-
-    // Clear previous results and state from local storage
-    chrome.storage.local.remove(
-      ["hiringResults", "currentPage", "processingComplete", "stopScript"],
-      () => {
-        console.log("Previous results and state cleared.");
-
-        // Get toggle states
-        const toggle1st = document
-          .getElementById("toggle-1st")
-          .classList.contains("active");
-        const toggle2nd = document
-          .getElementById("toggle-2nd")
-          .classList.contains("active");
-        const toggle3rd = document
-          .getElementById("toggle-3rd")
-          .classList.contains("active");
-
-        // Generate the LinkedIn URL based on selections
-        let network = [];
-        if (toggle1st) network.push('"F"');
-        if (toggle2nd) network.push('"S"');
-        if (toggle3rd) network.push('"O"');
-
-        const networkParam = `%5B${network.join("%2C")}%5D`;
-        const searchUrl = `https://www.linkedin.com/search/results/people/?keywords=hiring&network=${networkParam}&origin=FACETED_SEARCH`;
-
-        // Reset the necessary variables and set the new search URL in storage
-        chrome.storage.local.set(
-          {
-            stopScript: false,
-            currentPage: 1,
-            processingComplete: false,
-            searchUrl: searchUrl,
-          },
+    // Check if the current tab is on LinkedIn
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const activeTab = tabs[0];
+      const url = activeTab.url;
+      if (url.includes("linkedin.com")) {
+        startHiringCheck();
+      } else {
+        // If not on LinkedIn, navigate to LinkedIn
+        chrome.tabs.update(
+          activeTab.id,
+          { url: "https://www.linkedin.com" },
           () => {
-            console.log("Search URL stored:", searchUrl);
-
-            // Update the status immediately to show processing has started
-            updateStatus("Processing...");
-
-            // Navigate to the first search page immediately after setting the search URL
-            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-              chrome.scripting.executeScript(
-                {
-                  target: { tabId: tabs[0].id },
-                  function: (searchUrl) => (window.location.href = searchUrl),
-                  args: [searchUrl],
-                },
-                () => {
-                  console.log(
-                    "Navigating to the search page and executing the content script."
-                  );
-                }
-              );
-            });
+            updateStatus("Navigating to LinkedIn...");
+            setTimeout(() => {
+              startHiringCheck(); // Start the hiring check after navigating
+            }, 3000); // Delay to ensure the page loads
           }
         );
       }
-    );
+    });
   });
 
   document.getElementById("stop-hiring").addEventListener("click", () => {
@@ -140,7 +97,6 @@ document.addEventListener("DOMContentLoaded", () => {
         toggle3rd: toggle3rd,
       },
       () => {
-        console.log("Toggles saved.");
         displayWarning();
       }
     );
@@ -180,5 +136,60 @@ document.addEventListener("DOMContentLoaded", () => {
       statusDiv.textContent = status;
       statusDiv.classList.add("visible");
     }
+  }
+
+  function startHiringCheck() {
+    // Hide the "Check Hiring" button and show the "Stop" button when processing starts
+    document.getElementById("check-hiring").style.display = "none";
+    document.getElementById("stop-hiring").style.display = "block";
+
+    // Clear previous results and state from local storage
+    chrome.storage.local.remove(
+      ["hiringResults", "currentPage", "processingComplete", "stopScript"],
+      () => {
+        // Get toggle states
+        const toggle1st = document
+          .getElementById("toggle-1st")
+          .classList.contains("active");
+        const toggle2nd = document
+          .getElementById("toggle-2nd")
+          .classList.contains("active");
+        const toggle3rd = document
+          .getElementById("toggle-3rd")
+          .classList.contains("active");
+
+        // Generate the LinkedIn URL based on selections
+        let network = [];
+        if (toggle1st) network.push('"F"');
+        if (toggle2nd) network.push('"S"');
+        if (toggle3rd) network.push('"O"');
+
+        const networkParam = `%5B${network.join("%2C")}%5D`;
+        const searchUrl = `https://www.linkedin.com/search/results/people/?keywords=hiring&network=${networkParam}&origin=FACETED_SEARCH`;
+
+        // Reset the necessary variables and set the new search URL in storage
+        chrome.storage.local.set(
+          {
+            stopScript: false,
+            currentPage: 1,
+            processingComplete: false,
+            searchUrl: searchUrl,
+          },
+          () => {
+            // Update the status immediately to show processing has started
+            updateStatus("Processing...");
+
+            // Navigate to the first search page immediately after setting the search URL
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+              chrome.scripting.executeScript({
+                target: { tabId: tabs[0].id },
+                function: (searchUrl) => (window.location.href = searchUrl),
+                args: [searchUrl],
+              });
+            });
+          }
+        );
+      }
+    );
   }
 });
