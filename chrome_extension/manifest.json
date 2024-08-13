@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "LinkedIn Hiring Checker",
-  "version": "1.0",
-  "description": "Checks your LinkedIn connections for the word 'hiring' in their headlines.",
+  "version": "2.0",
+  "description": "Quickly find LinkedIn connections hiring or working at specific companies, helping you leverage your network for job opportunities.",
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["https://www.linkedin.com/*"],
   "action": {
