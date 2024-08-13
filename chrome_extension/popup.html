@@ -14,8 +14,11 @@
 
     <!-- Description for the toggles -->
     <p style="text-align: center; font-size: 14px; margin-bottom: 10px;">
-        Select the connection levels to search for people hiring.
+        Select the connection levels to search for people hiring or working at a specific company.
     </p>
+
+    <!-- Search bar for company name -->
+    <input type="text" id="company-name" placeholder="Enter company name (optional)" style="width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 5px; border: 1px solid #ddd;">
 
     <!-- Toggle Buttons for Connection Levels -->
     <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 8px;">
@@ -28,7 +31,7 @@
         Warning: Searching 3rd connections may take a long time and yield many results.
     </p>
 
-    <button id="check-hiring">Find Connections Hiring</button>
+    <button id="check-hiring">Search Connections</button>
     <button id="stop-hiring" style="display:none;">Stop</button>
     <div id="status">Idle</div>
     <div id="results"></div>

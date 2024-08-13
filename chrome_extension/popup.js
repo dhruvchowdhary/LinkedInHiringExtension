@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
         resultsDiv.appendChild(resultDiv);
       });
     } else {
-      resultsDiv.innerHTML = "No hiring results found.";
+      resultsDiv.innerHTML = "No results found.";
     }
   }
 
@@ -158,6 +158,11 @@ document.addEventListener("DOMContentLoaded", () => {
           .getElementById("toggle-3rd")
           .classList.contains("active");
 
+        // Get the company name from the search bar
+        const companyName =
+          document.getElementById("company-name").value.trim().toLowerCase() ||
+          "hiring";
+
         // Generate the LinkedIn URL based on selections
         let network = [];
         if (toggle1st) network.push('"F"');
@@ -165,7 +170,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (toggle3rd) network.push('"O"');
 
         const networkParam = `%5B${network.join("%2C")}%5D`;
-        const searchUrl = `https://www.linkedin.com/search/results/people/?keywords=hiring&network=${networkParam}&origin=FACETED_SEARCH`;
+        const searchUrl = `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(
+          companyName
+        )}&network=${networkParam}&origin=FACETED_SEARCH`;
 
         // Reset the necessary variables and set the new search URL in storage
         chrome.storage.local.set(
@@ -174,6 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
             currentPage: 1,
             processingComplete: false,
             searchUrl: searchUrl,
+            searchTerm: companyName, // Store the search term
           },
           () => {
             // Update the status immediately to show processing has started

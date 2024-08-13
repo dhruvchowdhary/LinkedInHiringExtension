@@ -4,7 +4,7 @@
   window.processingComplete = false;
   window.stopScript = false;
 
-  function checkHiring() {
+  function checkHiring(searchTerm) {
     const results = [];
     const items = document.querySelectorAll(
       ".reusable-search__result-container"
@@ -22,7 +22,7 @@
 
       if (
         headlineElement &&
-        headlineElement.textContent.toLowerCase().includes("hiring")
+        headlineElement.textContent.toLowerCase().includes(searchTerm)
       ) {
         const profileLink = item.querySelector(
           ".entity-result__title-text > a"
@@ -53,12 +53,10 @@
 
       chrome.storage.local.set({ hiringResults: newResults }, () => {
         if (window.processingComplete || window.stopScript) {
-          updateStatus(`Complete, Found ${newResults.length} people hiring!`);
+          updateStatus(`Complete, Found ${newResults.length} connections!`);
         } else {
           updatePopup(newResults);
-          updateStatus(
-            `Processing... Page ${window.currentPage}, Found ${newResults.length} people hiring!`
-          );
+          updateStatus(`Processing... Found ${newResults.length} connections!`);
         }
       });
     });
@@ -76,7 +74,6 @@
     chrome.storage.local.get("searchUrl", (data) => {
       let searchUrl = data.searchUrl;
       if (!searchUrl) {
-        console.error("Search URL is undefined.");
         return;
       }
 
@@ -96,7 +93,7 @@
   }
 
   function processPage() {
-    chrome.storage.local.get("stopScript", (data) => {
+    chrome.storage.local.get(["stopScript", "searchTerm"], (data) => {
       if (data.stopScript) {
         window.stopScript = true;
         window.processingComplete = true;
@@ -108,7 +105,7 @@
       if (window.processingComplete) {
         chrome.storage.local.get("hiringResults", (data) => {
           const allResults = data.hiringResults || [];
-          updateStatus(`Complete, Found ${allResults.length} people hiring!`);
+          updateStatus(`Complete, Found ${allResults.length} connections!`);
         });
         return;
       }
@@ -121,7 +118,7 @@
         return;
       }
 
-      const { results, foundHiring } = checkHiring();
+      const { results, foundHiring } = checkHiring(data.searchTerm || "hiring");
       saveAndDisplayResults(results);
 
       if (foundHiring) {
