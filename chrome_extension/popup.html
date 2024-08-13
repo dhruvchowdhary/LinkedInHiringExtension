@@ -7,36 +7,38 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
-        <img src="icons/logo.png" alt="Logo" style="width: 48px; height: 48px; margin-right: 8px;">
-        <h1 style="margin: 0;">LinkedIn Hiring Checker</h1>
+    <div class="header">
+        <img src="icons/logo.png" alt="Logo" class="logo">
+        <h1>LinkedIn Hiring Checker</h1>
     </div>
 
-    <!-- Description for the toggles -->
-    <p style="text-align: center; font-size: 12px; margin-bottom: 10px;">
-        Enter a company name to find people working there, or leave it blank to find connections hiring. Then select connection level(s) you want to search.
+    <!-- Description -->
+    <p class="description">
+        Enter a company name to find connections working there, or leave it blank to find connections hiring. Then select connection level(s) you want to search.
     </p>
 
     <!-- Search bar for company name -->
-    <div style="display: flex; justify-content: center; margin-bottom: 10px;">
-        <input type="text" id="company-name" placeholder="Enter company name (optional)" style="width: 80%; padding: 8px; border-radius: 5px; border: 1px solid #ddd;">
+    <div class="search-bar">
+        <input type="text" id="company-name" placeholder="Enter company name (optional)" class="input-field">
     </div>
 
     <!-- Toggle Buttons for Connection Levels -->
-    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 8px;">
+    <div class="toggle-buttons">
         <button id="toggle-1st" class="toggle-button">1st</button>
         <button id="toggle-2nd" class="toggle-button">2nd</button>
         <button id="toggle-3rd" class="toggle-button">3rd</button>
     </div>
 
-    <p id="warning-3rd" style="color: red; font-size: 11px; text-align: center; display: none;">
+    <p id="warning-3rd" class="warning-text">
         Warning: Searching 3rd connections may take a long time and yield many results.
     </p>
 
-    <button id="check-hiring">Search Connections</button>
-    <button id="stop-hiring" style="display:none;">Stop</button>
-    <div id="status">Idle</div>
+    <button id="check-hiring" class="action-button">Search Connections</button>
+    <button id="stop-hiring" class="action-button" style="display:none;">Stop</button>
+
+    <div id="status" class="status">Idle</div>
     <div id="results"></div>
+
     <script src="popup.js"></script>
 </body>
 </html>

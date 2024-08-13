@@ -1,36 +1,61 @@
 body {
     font-family: Arial, sans-serif;
-    width: 300px;
-    padding: 10px;
+    width: 320px;
+    padding: 15px;
+    background-color: #f5f5f5;
+    color: #333;
+    border-radius: 8px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.logo {
+    width: 48px;
+    height: 48px;
+    margin-right: 10px;
 }
 
 h1 {
-    font-size: 18px;
-    margin-bottom: 10px;
+    font-size: 21px;
+    margin: 0;
+    color: #0073b1;
 }
 
-button {
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
-    margin-top: 5px;
+.description {
+    text-align: center;
+    font-size: 13px;
     margin-bottom: 15px;
-    cursor: pointer;
-    border-radius: 10px;
-    border: 1px solid #ddd;
 }
 
-#results div {
-    margin-bottom: 4px;
-    padding: 5px;
+.search-bar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.input-field {
+    width: 90%;
+    padding: 10px;
     border-radius: 5px;
-    border: 1px solid #ddd;
+    border: 1px solid #ccc;
+    font-size: 14px;
 }
 
-/* Toggle Button Styling */
+.toggle-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
 .toggle-button {
     width: 60px;
-    height: 35px;  /* Adjusted height to make it less tall */
+    height: 35px;
     margin: 0 5px;
     border: none;
     border-radius: 8px;
@@ -46,6 +71,39 @@ button {
     color: #fff;
 }
 
+.warning-text {
+    color: red;
+    font-size: 11px;
+    text-align: center;
+    margin-top: -10px;
+    margin-bottom: 15px;
+}
+
+.action-button {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    border-radius: 8px;
+    border: 1px solid #0073b1;
+    background-color: #0073b1;
+    color: white;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.action-button:hover {
+    background-color: #005582;
+}
+
+#results div {
+    margin-bottom: 8px;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    background-color: #fff;
+}
+
 #status {
     display: none;  /* Hide the status initially */
 }
@@ -55,4 +113,5 @@ button {
     margin-top: 10px;
     text-align: left;
     font-size: 14px;
+    color: #333;
 }
