@@ -47,16 +47,25 @@
   }
 
   function saveAndDisplayResults(results) {
-    chrome.storage.local.get("hiringResults", (data) => {
+    chrome.storage.local.get(["hiringResults", "searchTerm"], (data) => {
       const allResults = data.hiringResults || [];
       const newResults = allResults.concat(results);
+      const searchTerm = data.searchTerm || "hiring";
 
       chrome.storage.local.set({ hiringResults: newResults }, () => {
         if (window.processingComplete || window.stopScript) {
-          updateStatus(`Complete, Found ${newResults.length} connections!`);
+          const statusText =
+            searchTerm === "hiring"
+              ? `Complete, Found ${newResults.length} connections hiring!`
+              : `Complete, Found ${newResults.length} connections at ${searchTerm}!`;
+          updateStatus(statusText);
         } else {
           updatePopup(newResults);
-          updateStatus(`Processing... Found ${newResults.length} connections!`);
+          const statusText =
+            searchTerm === "hiring"
+              ? `Processing... Found ${newResults.length} connections hiring!`
+              : `Processing... Found ${newResults.length} connections at ${searchTerm}!`;
+          updateStatus(statusText);
         }
       });
     });
@@ -105,7 +114,12 @@
       if (window.processingComplete) {
         chrome.storage.local.get("hiringResults", (data) => {
           const allResults = data.hiringResults || [];
-          updateStatus(`Complete, Found ${allResults.length} connections!`);
+          const searchTerm = data.searchTerm || "hiring";
+          const statusText =
+            searchTerm === "hiring"
+              ? `Complete, Found ${allResults.length} connections hiring!`
+              : `Complete, Found ${allResults.length} connections at ${searchTerm}!`;
+          updateStatus(statusText);
         });
         return;
       }

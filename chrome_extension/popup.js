@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   // Load previous selections from storage
   chrome.storage.local.get(
-    ["toggle1st", "toggle2nd", "toggle3rd", "hiringResults"],
+    ["toggle1st", "toggle2nd", "toggle3rd", "hiringResults", "searchTerm"],
     (data) => {
       if (data.toggle1st)
         document.getElementById("toggle-1st").classList.add("active");
@@ -10,12 +10,17 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.toggle3rd)
         document.getElementById("toggle-3rd").classList.add("active");
 
+      const searchTerm = data.searchTerm || "hiring";
+
       // Display previous results if available
       if (data.hiringResults && data.hiringResults.length > 0) {
+        const statusText =
+          searchTerm === "hiring"
+            ? `Previously found ${data.hiringResults.length} connections hiring!`
+            : `Previously found ${data.hiringResults.length} connections at ${searchTerm}!`;
+
         displayResults(data.hiringResults);
-        updateStatus(
-          `Previously found ${data.hiringResults.length} connections hiring!`
-        );
+        updateStatus(statusText);
       }
       displayWarning();
     }
