@@ -1,8 +1,11 @@
 (function () {
-  // Reset variables if they are already set
-  window.currentPage = parseInt(localStorage.getItem("currentPage")) || 1;
-  window.processingComplete = false;
-  window.stopScript = false;
+  // In-memory flags for this page load only. The page counter lives in
+  // chrome.storage.local (see below) — never in window.localStorage, so a
+  // run that is interrupted (tab closed, crash, navigation away) cannot
+  // leave a stale page number behind for the next run.
+  let currentPage = 1;
+  let processingComplete = false;
+  let stopScript = false;
 
   function checkHiring(searchTerm) {
     const results = [];
@@ -24,9 +27,17 @@
         headlineElement &&
         headlineElement.textContent.toLowerCase().includes(searchTerm)
       ) {
-        const profileLink = item.querySelector(
+        // Some results (e.g. private "LinkedIn Member" profiles) have no
+        // profile link. The old code read `.href` off a null element here,
+        // which threw and killed the whole page scan, losing every other
+        // result on the page. Skip link-less results instead.
+        const linkElement = item.querySelector(
           ".entity-result__title-text > a"
-        ).href;
+        );
+        if (!linkElement) {
+          return;
+        }
+        const profileLink = linkElement.href;
         const name = nameElement ? nameElement.textContent.trim() : "Unknown";
         const headline = headlineElement.textContent.trim();
 
@@ -49,15 +60,28 @@
   function saveAndDisplayResults(results) {
     chrome.storage.local.get(["hiringResults", "searchTerm"], (data) => {
       const allResults = data.hiringResults || [];
-      const newResults = allResults.concat(results);
+      // LinkedIn search pages can overlap, so the same profile can appear
+      // on two pages. Merge by profile link so nobody is listed twice.
+      const seen = new Set(allResults.map((r) => r.profileLink));
+      for (const result of results) {
+        if (!seen.has(result.profileLink)) {
+          seen.add(result.profileLink);
+          allResults.push(result);
+        }
+      }
+      const newResults = allResults;
       const searchTerm = data.searchTerm || "hiring";
 
       chrome.storage.local.set({ hiringResults: newResults }, () => {
-        if (window.processingComplete || window.stopScript) {
+        if (processingComplete || stopScript) {
+          // "Stopped" (not "Complete") when the user hit Stop, so the popup
+          // can swap the Stop button back to Search (it already listens for
+          // both words; only "Complete" was ever sent before).
+          const verb = stopScript ? "Stopped" : "Complete";
           const statusText =
             searchTerm === "hiring"
-              ? `Complete, Found ${newResults.length} connections hiring!`
-              : `Complete, Found ${newResults.length} connections at ${searchTerm}!`;
+              ? `${verb}, Found ${newResults.length} connections hiring!`
+              : `${verb}, Found ${newResults.length} connections at ${searchTerm}!`;
           updateStatus(statusText);
         } else {
           updatePopup(newResults);
@@ -87,8 +111,8 @@
       }
 
       // Update the search URL to include the current page number
-      if (window.currentPage > 1) {
-        searchUrl += `&page=${window.currentPage}`;
+      if (currentPage > 1) {
+        searchUrl += `&page=${currentPage}`;
       }
 
       window.location.href = searchUrl;
@@ -96,53 +120,72 @@
   }
 
   function navigateToNextPage() {
-    window.currentPage++;
-    localStorage.setItem("currentPage", window.currentPage);
-    navigateToSearchPage();
+    currentPage++;
+    // Single source of truth: the counter lives in chrome.storage.local,
+    // which the popup already clears when a new run starts. Previously it
+    // lived in window.localStorage while the popup cleared chrome.storage,
+    // so the two stores disagreed and a fresh run silently resumed at the
+    // stale page of an interrupted run, skipping pages 1..N-1.
+    chrome.storage.local.set({ currentPage }, () => {
+      navigateToSearchPage();
+    });
+  }
+
+  function finishRun() {
+    // A finished run leaves no page counter behind, so the next run
+    // always starts on page 1.
+    chrome.storage.local.remove(["currentPage"]);
   }
 
   function processPage() {
-    chrome.storage.local.get(["stopScript", "searchTerm"], (data) => {
-      if (data.stopScript) {
-        window.stopScript = true;
-        window.processingComplete = true;
-        saveAndDisplayResults([]); // Ensure we save and display final status
-        localStorage.removeItem("currentPage");
-        return;
-      }
+    chrome.storage.local.get(
+      ["stopScript", "searchTerm", "currentPage"],
+      (data) => {
+        if (data.stopScript) {
+          stopScript = true;
+          processingComplete = true;
+          saveAndDisplayResults([]); // Ensure we save and display final status
+          finishRun();
+          return;
+        }
 
-      if (window.processingComplete) {
-        chrome.storage.local.get("hiringResults", (data) => {
-          const allResults = data.hiringResults || [];
-          const searchTerm = data.searchTerm || "hiring";
-          const statusText =
-            searchTerm === "hiring"
-              ? `Complete, Found ${allResults.length} connections hiring!`
-              : `Complete, Found ${allResults.length} connections at ${searchTerm}!`;
-          updateStatus(statusText);
-        });
-        return;
-      }
+        if (processingComplete) {
+          chrome.storage.local.get("hiringResults", (data) => {
+            const allResults = data.hiringResults || [];
+            const searchTerm = data.searchTerm || "hiring";
+            const statusText =
+              searchTerm === "hiring"
+                ? `Complete, Found ${allResults.length} connections hiring!`
+                : `Complete, Found ${allResults.length} connections at ${searchTerm}!`;
+            updateStatus(statusText);
+          });
+          return;
+        }
 
-      // Check if we are on the correct search page
-      if (
-        !window.location.href.includes("linkedin.com/search/results/people/")
-      ) {
-        navigateToSearchPage();
-        return;
-      }
+        currentPage = data.currentPage || 1;
 
-      const { results, foundHiring } = checkHiring(data.searchTerm || "hiring");
-      saveAndDisplayResults(results);
+        // Check if we are on the correct search page
+        if (
+          !window.location.href.includes("linkedin.com/search/results/people/")
+        ) {
+          navigateToSearchPage();
+          return;
+        }
 
-      if (foundHiring) {
-        setTimeout(navigateToNextPage, 2000); // wait before navigating to the next page
-      } else {
-        window.processingComplete = true; // Ensure no further processing happens
-        saveAndDisplayResults([]); // Call to save final status and display complete message
-        localStorage.removeItem("currentPage");
+        const { results, foundHiring } = checkHiring(
+          data.searchTerm || "hiring"
+        );
+        saveAndDisplayResults(results);
+
+        if (foundHiring) {
+          setTimeout(navigateToNextPage, 2000); // wait before navigating to the next page
+        } else {
+          processingComplete = true; // Ensure no further processing happens
+          saveAndDisplayResults([]); // Call to save final status and display complete message
+          finishRun();
+        }
       }
-    });
+    );
   }
 
   // Start the process by calling processPage

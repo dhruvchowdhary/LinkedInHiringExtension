@@ -26,8 +26,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   );
 
-  // Event listeners for toggles
-  document.getElementById("toggle-1st").addEventListener("click", toggleButton);
+  // Results currently shown in the popup, kept for Copy / Download CSV.
+  let currentResults = [];
+
+  // Event listeners for the results footer
+  document.getElementById("copy-results").addEventListener("click", copyResults);
+  document
+    .getElementById("download-results")
+    .addEventListener("click", downloadResults);
+  document.getElementById("clear-results").addEventListener("click", clearResults);
   document.getElementById("toggle-2nd").addEventListener("click", toggleButton);
   document.getElementById("toggle-3rd").addEventListener("click", toggleButton);
 
@@ -121,16 +128,106 @@ document.addEventListener("DOMContentLoaded", () => {
   function displayResults(results) {
     const resultsDiv = document.getElementById("results");
     resultsDiv.innerHTML = "";
+    currentResults = results && results.length > 0 ? results : [];
+
+    const footer = document.getElementById("results-footer");
+    const count = document.getElementById("results-count");
+    if (currentResults.length > 0) {
+      count.textContent =
+        currentResults.length === 1
+          ? "1 connection"
+          : `${currentResults.length} connections`;
+      footer.style.display = "block";
+    } else {
+      footer.style.display = "none";
+    }
 
     if (results && results.length > 0) {
       results.forEach((result) => {
+        // Build the row with textContent, never innerHTML: names and
+        // headlines come from LinkedIn page text, and a headline containing
+        // HTML (e.g. `<img src=x onerror=...>`) used to be injected straight
+        // into the popup as markup.
         const resultDiv = document.createElement("div");
-        resultDiv.innerHTML = `<a href="${result.profileLink}" target="_blank"><strong>${result.name} (${result.connectionLevel})</strong></a>: ${result.headline}`;
+        resultDiv.className = "result";
+
+        const link = document.createElement("a");
+        link.href = result.profileLink;
+        link.target = "_blank";
+
+        const strong = document.createElement("strong");
+        strong.textContent = `${result.name} (${result.connectionLevel})`;
+        link.appendChild(strong);
+
+        resultDiv.appendChild(link);
+        resultDiv.appendChild(document.createTextNode(`: ${result.headline}`));
         resultsDiv.appendChild(resultDiv);
       });
     } else {
       resultsDiv.innerHTML = "No results found.";
     }
+  }
+
+  function resultsToText(results) {
+    return results
+      .map(
+        (r) => `${r.name} (${r.connectionLevel}) — ${r.headline} — ${r.profileLink}`
+      )
+      .join("\n");
+  }
+
+  function csvField(value) {
+    const text = String(value == null ? "" : value);
+    return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  }
+
+  function resultsToCsv(results) {
+    const header = ["Name", "Connection", "Headline", "Profile"].join(",");
+    const rows = results.map((r) =>
+      [r.name, r.connectionLevel, r.headline, r.profileLink]
+        .map(csvField)
+        .join(",")
+    );
+    return [header, ...rows].join("\n") + "\n";
+  }
+
+  function copyResults() {
+    if (currentResults.length === 0) return;
+    const text = resultsToText(currentResults);
+    const done = () => updateStatus("Copied to clipboard.");
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, () => copyViaTextarea(text, done));
+    } else {
+      copyViaTextarea(text, done);
+    }
+  }
+
+  function copyViaTextarea(text, done) {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+    done();
+  }
+
+  function downloadResults() {
+    if (currentResults.length === 0) return;
+    const blob = new Blob([resultsToCsv(currentResults)], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "linkedin-hiring-results.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function clearResults() {
+    chrome.storage.local.remove(["hiringResults"], () => {
+      displayResults([]);
+      updateStatus("Cleared.");
+    });
   }
 
   function updateStatus(status) {
@@ -147,6 +244,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // Hide the "Check Hiring" button and show the "Stop" button when processing starts
     document.getElementById("check-hiring").style.display = "none";
     document.getElementById("stop-hiring").style.display = "block";
+    // Clear the previous run's results from the popup immediately; the
+    // stored copy is removed below. Otherwise the old list sits there
+    // while the new scan runs.
+    displayResults([]);
 
     // Clear previous results and state from local storage
     chrome.storage.local.remove(

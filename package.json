@@ -1,0 +1,1 @@
+{"description":"Chrome extension that scans your LinkedIn connections for people who are hiring or work at a specific company.","name":"linkedin-hiring-checker","private":true,"scripts":{"package":"node scripts/package.js","test":"node tests/run-tests.js"},"version":"2.0.0"}
